@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { ImpactFeedbackStyle } from 'expo-haptics';
 import { colors } from '../constants/colors';
+import { fonts, tracking } from '../constants/typography';
 
 type RunningControlsProps = {
   onCancel: () => void;
@@ -31,67 +32,110 @@ export function RunningControls({ onCancel, onAdjust }: RunningControlsProps) {
   };
 
   return (
-    <View style={styles.row}>
-      <Pressable
-        style={styles.adjustButton}
-        onPress={handleMinus}
-        accessibilityLabel="Subtract 15 seconds"
-        testID="running-adjust-minus"
-      >
-        <Text style={styles.adjustText}>−15s</Text>
-      </Pressable>
+    <View style={styles.wrapper}>
+      <View style={styles.adjustRow}>
+        <Pressable
+          style={({ pressed }) => [styles.adjustButton, pressed && styles.pressed]}
+          onPress={handleMinus}
+          accessibilityLabel="Subtract 15 seconds"
+          testID="running-adjust-minus"
+        >
+          <Text style={styles.adjustGlyph}>−</Text>
+          <Text style={styles.adjustCaption}>15s</Text>
+        </Pressable>
+
+        <View style={styles.divider} />
+
+        <Pressable
+          style={({ pressed }) => [styles.adjustButton, pressed && styles.pressed]}
+          onPress={handlePlus}
+          accessibilityLabel="Add 15 seconds"
+          testID="running-adjust-plus"
+        >
+          <Text style={styles.adjustGlyph}>+</Text>
+          <Text style={styles.adjustCaption}>15s</Text>
+        </Pressable>
+      </View>
 
       <Pressable
-        style={styles.cancelButton}
+        style={({ pressed }) => [styles.cancelButton, pressed && styles.cancelPressed]}
         onPress={handleCancel}
         accessibilityLabel="Cancel timer"
         testID="running-cancel"
       >
-        <Text style={styles.cancelText}>Cancel</Text>
-      </Pressable>
-
-      <Pressable
-        style={styles.adjustButton}
-        onPress={handlePlus}
-        accessibilityLabel="Add 15 seconds"
-        testID="running-adjust-plus"
-      >
-        <Text style={styles.adjustText}>+15s</Text>
+        <Text style={styles.cancelText}>END SESSION</Text>
       </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
+  wrapper: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 20,
+  },
+  adjustRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 4,
+    height: 56,
   },
   adjustButton: {
-    height: 50,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
+    width: 92,
+    height: '100%',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
   },
-  adjustText: {
-    fontSize: 15,
-    fontWeight: '600',
+  adjustGlyph: {
+    fontFamily: fonts.display,
+    fontSize: 20,
+    fontWeight: '300',
     color: colors.text,
+    lineHeight: 22,
+    includeFontPadding: false,
+  },
+  adjustCaption: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textDim,
+    letterSpacing: tracking.label,
+    lineHeight: 14,
+    includeFontPadding: false,
+  },
+  divider: {
+    width: 1,
+    height: 24,
+    backgroundColor: colors.border,
+  },
+  pressed: {
+    opacity: 0.55,
   },
   cancelButton: {
-    flex: 1,
-    height: 60,
-    borderRadius: 16,
-    backgroundColor: colors.danger,
+    height: 52,
+    paddingHorizontal: 32,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  cancelPressed: {
+    backgroundColor: colors.danger,
+    borderColor: colors.danger,
+  },
   cancelText: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontFamily: fonts.body,
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textDim,
+    letterSpacing: tracking.chrome,
   },
 });

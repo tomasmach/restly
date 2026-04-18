@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { ImpactFeedbackStyle } from 'expo-haptics';
 import { colors } from '../constants/colors';
+import { fonts, tracking } from '../constants/typography';
 import { MIN_CUSTOM_SECONDS, MAX_CUSTOM_SECONDS } from '../constants/presets';
 
 type AddPresetModalProps = {
@@ -27,7 +28,6 @@ export function AddPresetModal({
   const [minutes, setMinutes] = useState(1);
   const [secondsField, setSecondsField] = useState(30);
 
-  // Reset when modal becomes visible
   useEffect(() => {
     if (visible) {
       setMinutes(1);
@@ -72,74 +72,59 @@ export function AddPresetModal({
     <Modal visible={visible} transparent animationType="fade">
       <Pressable style={styles.backdrop} onPress={handleCancel}>
         <Pressable style={styles.card} onPress={() => {}}>
-          <Text style={styles.title}>Add preset</Text>
+          <View pointerEvents="none" style={styles.cardTopEdge} />
+
+          <Text style={styles.kicker}>NEW PRESET</Text>
+          <Text style={styles.title}>Compose a duration</Text>
 
           {/* Picker row */}
           <View style={styles.pickerRow}>
-            {/* Minutes column */}
-            <View style={styles.column}>
-              <Pressable
-                style={styles.stepper}
-                onPress={() => changeMinutes(1)}
-                accessibilityLabel="Increase minutes"
-                testID="add-preset-minutes-plus"
-              >
-                <Text style={styles.stepperText}>+</Text>
-              </Pressable>
-              <Text style={styles.numberDisplay}>
-                {String(minutes).padStart(2, '0')}
-              </Text>
-              <Text style={styles.columnLabel}>min</Text>
-              <Pressable
-                style={styles.stepper}
-                onPress={() => changeMinutes(-1)}
-                accessibilityLabel="Decrease minutes"
-                testID="add-preset-minutes-minus"
-              >
-                <Text style={styles.stepperText}>−</Text>
-              </Pressable>
-            </View>
+            <Column
+              value={minutes}
+              label="MIN"
+              onIncrement={() => changeMinutes(1)}
+              onDecrement={() => changeMinutes(-1)}
+              incTestID="add-preset-minutes-plus"
+              decTestID="add-preset-minutes-minus"
+              incLabel="Increase minutes"
+              decLabel="Decrease minutes"
+            />
 
-            {/* Separator */}
-            <Text style={styles.colon}>:</Text>
+            <Text style={styles.colon}>·</Text>
 
-            {/* Seconds column */}
-            <View style={styles.column}>
-              <Pressable
-                style={styles.stepper}
-                onPress={() => changeSeconds(5)}
-                accessibilityLabel="Increase seconds"
-                testID="add-preset-seconds-plus"
-              >
-                <Text style={styles.stepperText}>+</Text>
-              </Pressable>
-              <Text style={styles.numberDisplay}>
-                {String(secondsField).padStart(2, '0')}
-              </Text>
-              <Text style={styles.columnLabel}>sec</Text>
-              <Pressable
-                style={styles.stepper}
-                onPress={() => changeSeconds(-5)}
-                accessibilityLabel="Decrease seconds"
-                testID="add-preset-seconds-minus"
-              >
-                <Text style={styles.stepperText}>−</Text>
-              </Pressable>
-            </View>
+            <Column
+              value={secondsField}
+              label="SEC"
+              onIncrement={() => changeSeconds(5)}
+              onDecrement={() => changeSeconds(-5)}
+              incTestID="add-preset-seconds-plus"
+              decTestID="add-preset-seconds-minus"
+              incLabel="Increase seconds"
+              decLabel="Decrease seconds"
+            />
           </View>
 
-          {/* Buttons */}
+          <View style={styles.divider} />
+
           <View style={styles.buttonsRow}>
-            <Pressable onPress={handleCancel} style={styles.cancelButton} testID="add-preset-cancel">
-              <Text style={styles.cancelText}>Cancel</Text>
+            <Pressable
+              onPress={handleCancel}
+              style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}
+              testID="add-preset-cancel"
+            >
+              <Text style={styles.cancelText}>CANCEL</Text>
             </Pressable>
             <Pressable
               onPress={handleSave}
               disabled={!isValid}
-              style={[styles.saveButton, !isValid && styles.saveButtonDisabled]}
+              style={({ pressed }) => [
+                styles.saveButton,
+                !isValid && styles.saveButtonDisabled,
+                pressed && isValid && styles.saveButtonPressed,
+              ]}
               testID="add-preset-save"
             >
-              <Text style={styles.saveText}>Save</Text>
+              <Text style={styles.saveText}>SAVE PRESET</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -148,94 +133,222 @@ export function AddPresetModal({
   );
 }
 
+type ColumnProps = {
+  value: number;
+  label: string;
+  onIncrement: () => void;
+  onDecrement: () => void;
+  incTestID: string;
+  decTestID: string;
+  incLabel: string;
+  decLabel: string;
+};
+
+function Column({
+  value,
+  label,
+  onIncrement,
+  onDecrement,
+  incTestID,
+  decTestID,
+  incLabel,
+  decLabel,
+}: ColumnProps) {
+  return (
+    <View style={styles.column}>
+      <Pressable
+        style={({ pressed }) => [styles.stepper, pressed && styles.pressed]}
+        onPress={onIncrement}
+        accessibilityLabel={incLabel}
+        testID={incTestID}
+      >
+        <Text style={styles.stepperGlyph}>+</Text>
+      </Pressable>
+
+      <View style={styles.valueWrap}>
+        <Text style={styles.numberDisplay}>{String(value).padStart(2, '0')}</Text>
+        <Text style={styles.columnLabel}>{label}</Text>
+      </View>
+
+      <Pressable
+        style={({ pressed }) => [styles.stepper, pressed && styles.pressed]}
+        onPress={onDecrement}
+        accessibilityLabel={decLabel}
+        testID={decTestID}
+      >
+        <Text style={styles.stepperGlyph}>−</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(8,6,5,0.78)',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 20,
   },
   card: {
-    width: '85%',
+    width: '100%',
     maxWidth: 360,
     backgroundColor: colors.surfaceRaised,
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingTop: 28,
+    paddingBottom: 20,
+    paddingHorizontal: 24,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.5,
+        shadowRadius: 30,
+        shadowOffset: { width: 0, height: 20 },
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
+  },
+  cardTopEdge: {
+    position: 'absolute',
+    top: 0,
+    left: 24,
+    right: 24,
+    height: 1,
+    backgroundColor: colors.hairlineStrong,
+  },
+  kicker: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.accent,
+    letterSpacing: tracking.chrome,
+    textAlign: 'center',
+    marginBottom: 8,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '600',
+    fontFamily: fonts.display,
+    fontSize: 24,
+    fontWeight: '400',
     color: colors.text,
-    marginBottom: 24,
     textAlign: 'center',
+    letterSpacing: tracking.tight,
+    marginBottom: 28,
   },
   pickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
-    marginBottom: 32,
+    gap: 8,
+    marginBottom: 24,
   },
   column: {
     alignItems: 'center',
-    gap: 6,
+    gap: 10,
+  },
+  valueWrap: {
+    alignItems: 'center',
   },
   columnLabel: {
-    fontSize: 14,
-    color: colors.textDim,
+    fontFamily: fonts.body,
+    fontSize: 9,
+    fontWeight: '600',
+    color: colors.textMuted,
+    letterSpacing: tracking.chrome,
+    marginTop: 4,
   },
   numberDisplay: {
-    fontSize: 48,
-    fontWeight: '700',
+    fontFamily: fonts.display,
+    fontSize: 56,
+    fontWeight: '300',
     color: colors.text,
     fontVariant: ['tabular-nums'],
-    lineHeight: 56,
+    letterSpacing: tracking.tight,
+    lineHeight: 60,
   },
   colon: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 28,
+    fontFamily: fonts.display,
+    fontSize: 32,
+    color: colors.accentDeep,
+    marginHorizontal: 4,
   },
   stepper: {
     width: 44,
     height: 44,
     borderRadius: 22,
     backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepperText: {
-    fontSize: 24,
+  stepperGlyph: {
+    fontFamily: fonts.display,
+    fontSize: 22,
+    fontWeight: '300',
     color: colors.text,
-    lineHeight: 28,
+    lineHeight: 24,
+  },
+  pressed: {
+    opacity: 0.55,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: 4,
+    marginHorizontal: -24,
   },
   buttonsRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 16,
     gap: 12,
   },
   cancelButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
   },
   cancelText: {
-    fontSize: 16,
+    fontFamily: fonts.body,
+    fontSize: 11,
+    fontWeight: '700',
     color: colors.textDim,
+    letterSpacing: tracking.chrome,
   },
   saveButton: {
     flex: 1,
+    height: 52,
+    borderRadius: 999,
     backgroundColor: colors.accent,
-    borderRadius: 24,
-    paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.accent,
+        shadowOpacity: 0.45,
+        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 0 },
+      },
+    }),
+  },
+  saveButtonPressed: {
+    backgroundColor: colors.accentSoft,
   },
   saveButtonDisabled: {
-    opacity: 0.3,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowOpacity: 0,
   },
   saveText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
+    fontFamily: fonts.body,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1A1410',
+    letterSpacing: tracking.chrome,
   },
 });

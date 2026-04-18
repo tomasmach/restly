@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -21,6 +22,7 @@ import { usePresets } from '../hooks/usePresets';
 import { useNotifications } from '../hooks/useNotifications';
 
 import { colors } from '../constants/colors';
+import { fonts, tracking } from '../constants/typography';
 import { FIXED_PRESETS, MAX_CUSTOM_PRESETS } from '../constants/presets';
 import { formatSeconds } from '../utils/time';
 
@@ -53,9 +55,13 @@ export function TimerScreen() {
 
   const [modalVisible, setModalVisible] = useState(false);
 
+  // Compute tile width so two columns always fit cleanly with a 12px gap.
+  const { width: screenWidth } = useWindowDimensions();
+  const GRID_HPAD = 20;
+  const GRID_GAP = 12;
+  const tileWidth = (screenWidth - GRID_HPAD * 2 - GRID_GAP) / 2;
+
   // ── acknowledgeComplete after 1500 ms ──────────────────────────────────────
-  // We only want this effect to fire once when status becomes 'completed', not
-  // re-fire on unrelated renders. Depend only on timer.status.
   const acknowledgeRef = useRef(timer.acknowledgeComplete);
   useEffect(() => {
     acknowledgeRef.current = timer.acknowledgeComplete;
@@ -69,25 +75,20 @@ export function TimerScreen() {
     return () => clearTimeout(timeout);
   }, [timer.status]);
 
-  // ── Highlight logic ────────────────────────────────────────────────────────
-  // While running/completed we use timer.lastUsedSeconds (persists through
-  // acknowledgeComplete). After ack it falls back to the persisted lastUsed.
   const highlightedSeconds = useMemo(
     () => timer.lastUsedSeconds ?? lastUsed,
     [timer.lastUsedSeconds, lastUsed],
   );
 
-  // ── handleStart ────────────────────────────────────────────────────────────
   const handleStart = useCallback(
     async (seconds: number) => {
-      await ensurePermission(); // don't block on denial
+      await ensurePermission();
       await setLastUsed(seconds);
       await timer.start(seconds);
     },
     [ensurePermission, setLastUsed, timer],
   );
 
-  // ── handleDeleteCustom ─────────────────────────────────────────────────────
   const handleDeleteCustom = useCallback(
     (seconds: number) => {
       Alert.alert(
@@ -106,7 +107,6 @@ export function TimerScreen() {
     [removePreset],
   );
 
-  // ── handleAddPreset ────────────────────────────────────────────────────────
   const handleAddPreset = useCallback(
     async (seconds: number) => {
       await addPreset(seconds);
@@ -114,7 +114,6 @@ export function TimerScreen() {
     [addPreset],
   );
 
-  // ── Loading state ──────────────────────────────────────────────────────────
   if (!hydrated) {
     return <View style={styles.loadingContainer} />;
   }
@@ -123,16 +122,17 @@ export function TimerScreen() {
   if (timer.status === 'running' || timer.status === 'completed') {
     const progress =
       timer.totalMs > 0 ? timer.remainingMs / timer.totalMs : 0;
+    const totalSeconds = Math.round(timer.totalMs / 1000);
 
     return (
       <View style={styles.runningContainer}>
+        <View style={styles.runningHeader}>
+          <Text style={styles.runningKicker}>SESSION IN PROGRESS</Text>
+          <Text style={styles.runningDuration}>{formatSeconds(totalSeconds)}</Text>
+        </View>
+
         <View style={styles.progressWrapper}>
-          <CircularProgress
-            progress={progress}
-            size={280}
-            strokeWidth={16}
-          />
-          {/* CountdownDisplay absolutely centered inside the ring */}
+          <CircularProgress progress={progress} size={300} strokeWidth={6} />
           <View style={styles.countdownOverlay}>
             <CountdownDisplay remainingMs={timer.remainingMs} testID="countdown-display" />
           </View>
@@ -155,10 +155,17 @@ export function TimerScreen() {
         contentContainerStyle={styles.gridContent}
         style={styles.gridScroll}
       >
+        <View style={styles.header}>
+          <Text style={styles.brand}>Restly</Text>
+          <View style={styles.headerRule} />
+          <Text style={styles.tagline}>A QUIET TIMER · REST WELL</Text>
+        </View>
+
+        <Text style={styles.sectionLabel}>CHOOSE A PRESET</Text>
+
         <View style={styles.grid}>
-          {/* Fixed presets */}
           {FIXED_PRESETS.map((seconds) => (
-            <View key={`fixed-${seconds}`} style={styles.tile}>
+            <View key={`fixed-${seconds}`} style={[styles.tile, { width: tileWidth }]}>
               <PresetButton
                 seconds={seconds}
                 isCustom={false}
@@ -169,9 +176,8 @@ export function TimerScreen() {
             </View>
           ))}
 
-          {/* Custom presets */}
           {customPresets.map((seconds) => (
-            <View key={`custom-${seconds}`} style={styles.tile}>
+            <View key={`custom-${seconds}`} style={[styles.tile, { width: tileWidth }]}>
               <PresetButton
                 seconds={seconds}
                 isCustom={true}
@@ -183,13 +189,16 @@ export function TimerScreen() {
             </View>
           ))}
 
-          {/* Add preset tile */}
           {customPresets.length < MAX_CUSTOM_PRESETS && (
-            <View style={styles.tile}>
+            <View style={[styles.tile, { width: tileWidth }]}>
               <AddTileButton onPress={() => setModalVisible(true)} testID="add-preset-tile" />
             </View>
           )}
         </View>
+
+        {customPresets.length > 0 && (
+          <Text style={styles.footnote}>HOLD A CUSTOM PRESET TO REMOVE</Text>
+        )}
       </ScrollView>
 
       <AddPresetModal
@@ -218,8 +227,13 @@ function AddTileButton({ onPress, testID }: AddTileButtonProps) {
   };
 
   return (
-    <Pressable style={styles.addTile} onPress={handlePress} testID={testID}>
-      <Text style={styles.addTileText}>+</Text>
+    <Pressable
+      style={({ pressed }) => [styles.addTile, pressed && styles.addTilePressed]}
+      onPress={handlePress}
+      testID={testID}
+    >
+      <Text style={styles.addTileGlyph}>+</Text>
+      <Text style={styles.addTileLabel}>NEW PRESET</Text>
     </Pressable>
   );
 }
@@ -236,12 +250,34 @@ const styles = StyleSheet.create({
   runningContainer: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 48,
+    paddingBottom: 56,
+  },
+  runningHeader: {
+    alignItems: 'center',
+  },
+  runningKicker: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.textMuted,
+    letterSpacing: tracking.chrome,
+    marginBottom: 8,
+  },
+  runningDuration: {
+    fontFamily: fonts.display,
+    fontSize: 20,
+    fontWeight: '400',
+    color: colors.textDim,
+    fontVariant: ['tabular-nums'],
+    letterSpacing: tracking.tight,
   },
   progressWrapper: {
     position: 'relative',
-    width: 280,
-    height: 280,
+    width: 300,
+    height: 300,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -255,9 +291,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   controlsWrapper: {
-    marginTop: 48,
     width: '100%',
     paddingHorizontal: 20,
+    alignItems: 'center',
   },
 
   // Idle / grid view
@@ -265,7 +301,44 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   gridContent: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 28,
+    paddingBottom: 40,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 44,
+  },
+  brand: {
+    fontFamily: fonts.display,
+    fontSize: 42,
+    fontWeight: '400',
+    color: colors.text,
+    letterSpacing: tracking.tight,
+    lineHeight: 46,
+  },
+  headerRule: {
+    width: 36,
+    height: 1,
+    backgroundColor: colors.accentDeep,
+    marginTop: 12,
+    marginBottom: 12,
+  },
+  tagline: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.textMuted,
+    letterSpacing: tracking.chrome,
+  },
+  sectionLabel: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.textMuted,
+    letterSpacing: tracking.chrome,
+    marginBottom: 16,
+    paddingLeft: 4,
   },
   grid: {
     flexDirection: 'row',
@@ -273,23 +346,49 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   tile: {
-    width: '48%',
+    // Actual width is injected inline (screen-width dependent) to guarantee
+    // two columns without wrap from rounding errors.
   },
 
-  // Add tile button
+  footnote: {
+    marginTop: 28,
+    textAlign: 'center',
+    fontFamily: fonts.body,
+    fontSize: 9,
+    fontWeight: '600',
+    color: colors.textMuted,
+    letterSpacing: tracking.chrome,
+  },
+
+  // Add tile
   addTile: {
-    borderRadius: 16,
-    height: 80,
+    height: 104,
     width: '100%',
-    backgroundColor: colors.surface,
-    borderWidth: 2,
-    borderColor: colors.border,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    borderStyle: 'dashed',
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
   },
-  addTileText: {
-    fontSize: 32,
+  addTilePressed: {
+    borderColor: colors.accentDeep,
+    backgroundColor: colors.surface,
+  },
+  addTileGlyph: {
+    fontFamily: fonts.display,
+    fontSize: 28,
+    fontWeight: '300',
     color: colors.textDim,
-    lineHeight: 36,
+    lineHeight: 30,
+  },
+  addTileLabel: {
+    fontFamily: fonts.body,
+    fontSize: 9,
+    fontWeight: '600',
+    color: colors.textMuted,
+    letterSpacing: tracking.chrome,
   },
 });
