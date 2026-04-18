@@ -6,7 +6,10 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "ios:dev": "npx expo run:ios",
+    "test:e2e": "maestro test .maestro",
+    "test:e2e:start-cancel": "maestro test .maestro/start-and-cancel.yaml"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",

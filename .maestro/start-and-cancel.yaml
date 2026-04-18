@@ -1,0 +1,14 @@
+appId: com.tomasmach.restly
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "preset-60"
+- assertVisible:
+    id: "countdown-display"
+- assertVisible:
+    id: "running-cancel"
+- tapOn:
+    id: "running-cancel"
+- assertVisible:
+    id: "preset-60"

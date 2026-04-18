@@ -60,3 +60,25 @@ Things the developer must still do manually:
 ## Scope guard
 
 If tempted to add a feature, don't. This app is intentionally boring. Widgets, Live Activities, Watch companion are explicitly v2.
+
+## E2E tests (Maestro)
+
+One-time setup (developer machine):
+
+1. Install Maestro CLI: `curl -fsSL "https://get.maestro.mobile.dev" | bash`
+2. Build a native iOS dev client: `npm run ios:dev` (runs `npx expo run:ios`). This compiles a `.app` with bundle id `com.tomasmach.restly` and installs it in the simulator.
+
+Run tests (after the app is installed in the booted simulator):
+
+```
+npm run test:e2e
+```
+
+Flows live under `.maestro/`:
+- `start-and-cancel.yaml` — tap 60s preset, verify countdown shows, cancel.
+- `add-custom-preset.yaml` — add a 2:30 preset via the modal, verify tile appears.
+- `delete-custom-preset.yaml` — add then long-press-delete a custom preset.
+
+Known caveats:
+- Haptics and notifications aren't asserted by flows (Maestro can't observe them). Manual verification on a real device is still required for the completion UX.
+- Flows use `clearState` to start from a clean AsyncStorage each run.

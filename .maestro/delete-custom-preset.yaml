@@ -1,0 +1,17 @@
+appId: com.tomasmach.restly
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "add-preset-tile"
+- tapOn:
+    id: "add-preset-minutes-plus"
+- tapOn:
+    id: "add-preset-save"
+- assertVisible:
+    id: "preset-150"
+- longPressOn:
+    id: "preset-150"
+- tapOn: "Delete"
+- assertNotVisible:
+    id: "preset-150"
