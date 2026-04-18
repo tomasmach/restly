@@ -71,6 +71,9 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
 
   /** Core completion logic. Called from interval or AppState. */
   const fireCompletion = useCallback(async () => {
+    if (statusRef.current !== 'running') return;  // re-entry guard
+    statusRef.current = 'completed';               // close the window immediately
+
     clearInterval_();
 
     try {
