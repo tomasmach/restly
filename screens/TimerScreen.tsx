@@ -134,7 +134,7 @@ export function TimerScreen() {
           />
           {/* CountdownDisplay absolutely centered inside the ring */}
           <View style={styles.countdownOverlay}>
-            <CountdownDisplay remainingMs={timer.remainingMs} />
+            <CountdownDisplay remainingMs={timer.remainingMs} testID="countdown-display" />
           </View>
         </View>
 
@@ -163,6 +163,7 @@ export function TimerScreen() {
                 seconds={seconds}
                 isCustom={false}
                 isHighlighted={seconds === highlightedSeconds}
+                testID={`preset-${seconds}`}
                 onPress={() => handleStart(seconds)}
               />
             </View>
@@ -175,6 +176,7 @@ export function TimerScreen() {
                 seconds={seconds}
                 isCustom={true}
                 isHighlighted={seconds === highlightedSeconds}
+                testID={`preset-${seconds}`}
                 onPress={() => handleStart(seconds)}
                 onLongPress={() => handleDeleteCustom(seconds)}
               />
@@ -184,7 +186,7 @@ export function TimerScreen() {
           {/* Add preset tile */}
           {customPresets.length < MAX_CUSTOM_PRESETS && (
             <View style={styles.tile}>
-              <AddTileButton onPress={() => setModalVisible(true)} />
+              <AddTileButton onPress={() => setModalVisible(true)} testID="add-preset-tile" />
             </View>
           )}
         </View>
@@ -204,9 +206,10 @@ export function TimerScreen() {
 
 type AddTileButtonProps = {
   onPress: () => void;
+  testID?: string;
 };
 
-function AddTileButton({ onPress }: AddTileButtonProps) {
+function AddTileButton({ onPress, testID }: AddTileButtonProps) {
   const handlePress = async () => {
     try {
       await Haptics.impactAsync(ImpactFeedbackStyle.Light);
@@ -215,7 +218,7 @@ function AddTileButton({ onPress }: AddTileButtonProps) {
   };
 
   return (
-    <Pressable style={styles.addTile} onPress={handlePress}>
+    <Pressable style={styles.addTile} onPress={handlePress} testID={testID}>
       <Text style={styles.addTileText}>+</Text>
     </Pressable>
   );

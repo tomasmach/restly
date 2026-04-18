@@ -82,6 +82,7 @@ export function AddPresetModal({
                 style={styles.stepper}
                 onPress={() => changeMinutes(1)}
                 accessibilityLabel="Increase minutes"
+                testID="add-preset-minutes-plus"
               >
                 <Text style={styles.stepperText}>+</Text>
               </Pressable>
@@ -93,6 +94,7 @@ export function AddPresetModal({
                 style={styles.stepper}
                 onPress={() => changeMinutes(-1)}
                 accessibilityLabel="Decrease minutes"
+                testID="add-preset-minutes-minus"
               >
                 <Text style={styles.stepperText}>−</Text>
               </Pressable>
@@ -107,6 +109,7 @@ export function AddPresetModal({
                 style={styles.stepper}
                 onPress={() => changeSeconds(5)}
                 accessibilityLabel="Increase seconds"
+                testID="add-preset-seconds-plus"
               >
                 <Text style={styles.stepperText}>+</Text>
               </Pressable>
@@ -118,6 +121,7 @@ export function AddPresetModal({
                 style={styles.stepper}
                 onPress={() => changeSeconds(-5)}
                 accessibilityLabel="Decrease seconds"
+                testID="add-preset-seconds-minus"
               >
                 <Text style={styles.stepperText}>−</Text>
               </Pressable>
@@ -126,13 +130,14 @@ export function AddPresetModal({
 
           {/* Buttons */}
           <View style={styles.buttonsRow}>
-            <Pressable onPress={handleCancel} style={styles.cancelButton}>
+            <Pressable onPress={handleCancel} style={styles.cancelButton} testID="add-preset-cancel">
               <Text style={styles.cancelText}>Cancel</Text>
             </Pressable>
             <Pressable
               onPress={handleSave}
               disabled={!isValid}
               style={[styles.saveButton, !isValid && styles.saveButtonDisabled]}
+              testID="add-preset-save"
             >
               <Text style={styles.saveText}>Save</Text>
             </Pressable>

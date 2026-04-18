@@ -36,6 +36,7 @@ export function RunningControls({ onCancel, onAdjust }: RunningControlsProps) {
         style={styles.adjustButton}
         onPress={handleMinus}
         accessibilityLabel="Subtract 15 seconds"
+        testID="running-adjust-minus"
       >
         <Text style={styles.adjustText}>−15s</Text>
       </Pressable>
@@ -44,6 +45,7 @@ export function RunningControls({ onCancel, onAdjust }: RunningControlsProps) {
         style={styles.cancelButton}
         onPress={handleCancel}
         accessibilityLabel="Cancel timer"
+        testID="running-cancel"
       >
         <Text style={styles.cancelText}>Cancel</Text>
       </Pressable>
@@ -52,6 +54,7 @@ export function RunningControls({ onCancel, onAdjust }: RunningControlsProps) {
         style={styles.adjustButton}
         onPress={handlePlus}
         accessibilityLabel="Add 15 seconds"
+        testID="running-adjust-plus"
       >
         <Text style={styles.adjustText}>+15s</Text>
       </Pressable>

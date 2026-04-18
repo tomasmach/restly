@@ -4,12 +4,13 @@ import { formatMs } from '../utils/time';
 
 type CountdownDisplayProps = {
   remainingMs: number;
+  testID?: string;
 };
 
-export function CountdownDisplay({ remainingMs }: CountdownDisplayProps) {
+export function CountdownDisplay({ remainingMs, testID }: CountdownDisplayProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>{formatMs(remainingMs)}</Text>
+      <Text style={styles.text} testID={testID}>{formatMs(remainingMs)}</Text>
     </View>
   );
 }

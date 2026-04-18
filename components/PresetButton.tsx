@@ -9,6 +9,7 @@ type PresetButtonProps = {
   isCustom?: boolean;
   isHighlighted?: boolean;
   disabled?: boolean;
+  testID?: string;
   onPress: () => void;
   onLongPress?: () => void;
 };
@@ -18,6 +19,7 @@ export function PresetButton({
   isCustom: _isCustom,
   isHighlighted = false,
   disabled = false,
+  testID,
   onPress,
   onLongPress,
 }: PresetButtonProps) {
@@ -40,6 +42,7 @@ export function PresetButton({
       onPress={handlePress}
       onLongPress={handleLongPress}
       disabled={disabled}
+      testID={testID}
       style={[
         styles.container,
         { borderColor: isHighlighted ? colors.accent : colors.border },
