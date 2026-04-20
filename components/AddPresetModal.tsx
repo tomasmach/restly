@@ -36,10 +36,10 @@ export function AddPresetModal({
   }, [visible]);
 
   const total = minutes * 60 + secondsField;
-  const isValid =
-    total >= MIN_CUSTOM_SECONDS &&
-    total <= MAX_CUSTOM_SECONDS &&
-    !existingPresets.includes(total);
+  const inRange = total >= MIN_CUSTOM_SECONDS && total <= MAX_CUSTOM_SECONDS;
+  const alreadyExists = inRange && existingPresets.includes(total);
+  const isValid = inRange && !alreadyExists;
+  const saveLabel = alreadyExists ? 'ALREADY EXISTS' : 'SAVE PRESET';
 
   const changeMinutes = (delta: number) => {
     haptic();
@@ -90,7 +90,7 @@ export function AddPresetModal({
               decLabel="Decrease minutes"
             />
 
-            <Text style={styles.colon}>·</Text>
+            <Text style={styles.colon}>:</Text>
 
             <Column
               value={secondsField}
@@ -124,7 +124,9 @@ export function AddPresetModal({
               ]}
               testID="add-preset-save"
             >
-              <Text style={styles.saveText}>SAVE PRESET</Text>
+              <Text style={[styles.saveText, !isValid && styles.saveTextDisabled]}>
+                {saveLabel}
+              </Text>
             </Pressable>
           </View>
         </Pressable>
@@ -350,5 +352,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1A1410',
     letterSpacing: tracking.chrome,
+  },
+  saveTextDisabled: {
+    color: colors.textDim,
   },
 });
