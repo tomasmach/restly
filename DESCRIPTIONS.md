@@ -1,14 +1,14 @@
-# App Store & Google Play Descriptions — Restly
+# App Store & Google Play Descriptions — Repause
 
 ---
 
 ## iOS App Description (698/4000 chars)
 
-Put your phone down. Restly will tell you when it's time to lift again.
+Put your phone down. Repause will tell you when it's time to lift again.
 
-Most rest timers bury you in settings, subscriptions, and sign-up screens. Restly skips all of that. Open the app, tap your rest time, and get back to the bar.
+Most rest timers bury you in settings, subscriptions, and sign-up screens. Repause skips all of that. Open the app, tap your rest time, and get back to the bar.
 
-**What Restly does:**
+**What Repause does:**
 - Tap a preset and your timer starts instantly
 - A buzzer notification fires when your rest is up — even if your phone is locked
 - Haptic feedback so you feel it in your hand
@@ -18,9 +18,9 @@ Most rest timers bury you in settings, subscriptions, and sign-up screens. Restl
 
 That's it. No feed. No tracking. No bloat.
 
-Whether you're lifting heavy and need a full 3 minutes or squeezing in supersets, Restly keeps it simple.
+Whether you're lifting heavy and need a full 3 minutes or squeezing in supersets, Repause keeps it simple.
 
-**Download Restly — free, forever.**
+**Download Repause — free, forever.**
 
 ---
 
@@ -44,9 +44,9 @@ Simple gym rest timer with presets and buzzer notifications. No account, no ads 
 
 ## Android Full Description (752/4000 chars)
 
-Put your phone down. Restly will tell you when it's time to lift again.
+Put your phone down. Repause will tell you when it's time to lift again.
 
-Most rest timer apps are cluttered with settings, subscriptions, and accounts you never asked for. Restly cuts through all of it. Open the app, tap your rest time, and get back to the weights.
+Most rest timer apps are cluttered with settings, subscriptions, and accounts you never asked for. Repause cuts through all of it. Open the app, tap your rest time, and get back to the weights.
 
 **Features:**
 - One-tap presets — start your rest timer instantly
@@ -60,7 +60,7 @@ Perfect for weightlifting, strength training, powerlifting, or any gym session w
 
 No backend. No ads. No fluff.
 
-**Restly is free.**
+**Repause is free.**
 
 ---
 

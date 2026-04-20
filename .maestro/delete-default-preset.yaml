@@ -1,4 +1,4 @@
-appId: com.tomasmach.restly
+appId: com.tomasmach.repause
 ---
 - launchApp:
     clearState: true

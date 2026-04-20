@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Restly",
-    "slug": "restly",
+    "name": "Repause",
+    "slug": "repause",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.tomasmach.restly",
+      "bundleIdentifier": "com.tomasmach.repause",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

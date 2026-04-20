@@ -1,18 +1,18 @@
-# Privacy Policy for Restly
+# Privacy Policy for Repause
 
 **Last Updated:** April 20, 2026
 
 ## Introduction
 
-Restly is operated by an individual developer (sole trader). This privacy policy explains how the Restly mobile app handles your data. I've written it to be straightforward — no dense legalese.
+Repause is operated by an individual developer (sole trader). This privacy policy explains how the Repause mobile app handles your data. I've written it to be straightforward — no dense legalese.
 
-By using Restly, you agree to the practices described here.
+By using Repause, you agree to the practices described here.
 
 ---
 
 ## Who We Are
 
-Restly is developed and operated independently by a sole trader. For any privacy-related questions or requests, contact: **tomades1@gmail.com**
+Repause is developed and operated independently by a sole trader. For any privacy-related questions or requests, contact: **tomades1@gmail.com**
 
 ---
 
@@ -20,23 +20,23 @@ Restly is developed and operated independently by a sole trader. For any privacy
 
 ### Notification Data
 
-Restly uses local notifications to alert you when your rest timers complete. To deliver these notifications, your device generates a **local notification permission status** — this is stored on your device only and is not transmitted to any server.
+Repause uses local notifications to alert you when your rest timers complete. To deliver these notifications, your device generates a **local notification permission status** — this is stored on your device only and is not transmitted to any server.
 
 If you grant notification permissions, your device may generate a **push notification token** through the Expo notifications infrastructure. This token is used solely for delivering notifications related to your app experience and is not used for marketing or tracking purposes.
 
 ### No Account or Personal Data
 
-Restly does not require you to create an account. We do not collect your name, email address, location, payment information, contacts, or any other personal identifiers.
+Repause does not require you to create an account. We do not collect your name, email address, location, payment information, contacts, or any other personal identifiers.
 
 ### No Analytics or Tracking
 
-Restly contains no analytics SDKs, advertising networks, or behavioral tracking tools. We do not track how you use the app.
+Repause contains no analytics SDKs, advertising networks, or behavioral tracking tools. We do not track how you use the app.
 
 ---
 
 ## How We Use Your Data
 
-The only data processed by Restly relates to notifications:
+The only data processed by Repause relates to notifications:
 
 - **Notification permission status** — to know whether we can send you timer alerts
 - **Push notification token** (if applicable) — to deliver in-app timer notifications via the Expo push service
@@ -49,19 +49,19 @@ We do not use any data for advertising, profiling, or sale to third parties.
 
 ### Expo Notifications
 
-Restly uses **expo-notifications**, a SDK developed by Expo (a service of 650 Industries, Inc.), to schedule and deliver local timer notifications on your device.
+Repause uses **expo-notifications**, a SDK developed by Expo (a service of 650 Industries, Inc.), to schedule and deliver local timer notifications on your device.
 
 - **What it may collect:** Device push token, notification permission status, notification delivery events
 - **Purpose:** Timer alerts and local notifications only
 - **Expo's Privacy Policy:** [https://expo.dev/privacy](https://expo.dev/privacy)
 
-No other third-party services are integrated into Restly.
+No other third-party services are integrated into Repause.
 
 ---
 
 ## Data Retention
 
-Restly does not store personal data on any server. All timer and preference data lives locally on your device and is removed when you uninstall the app.
+Repause does not store personal data on any server. All timer and preference data lives locally on your device and is removed when you uninstall the app.
 
 Expo's notification infrastructure may retain push tokens according to their own data retention policies — see [Expo's Privacy Policy](https://expo.dev/privacy) for details.
 
@@ -78,7 +78,7 @@ If you are located in the European Economic Area (EEA), you have the following r
 - **Right to data portability** — request your data in a portable format
 - **Right to object** — object to processing of your personal data
 
-Since Restly collects minimal data and stores nothing on our servers, most of these rights can be exercised by simply uninstalling the app. For any requests, contact **tomades1@gmail.com** and we will respond within 30 days.
+Since Repause collects minimal data and stores nothing on our servers, most of these rights can be exercised by simply uninstalling the app. For any requests, contact **tomades1@gmail.com** and we will respond within 30 days.
 
 You also have the right to lodge a complaint with your local data protection authority.
 
@@ -86,7 +86,7 @@ You also have the right to lodge a complaint with your local data protection aut
 
 ## Changes to This Policy
 
-If this policy changes, the updated version will be published at this URL with a new "Last Updated" date. For a personal testing app like Restly, significant changes are unlikely — but we'll always be transparent about them.
+If this policy changes, the updated version will be published at this URL with a new "Last Updated" date. For a personal testing app like Repause, significant changes are unlikely — but we'll always be transparent about them.
 
 ---
 

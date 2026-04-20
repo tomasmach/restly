@@ -1,5 +1,5 @@
 /**
- * Asset generation script for Restly.
+ * Asset generation script for Repause.
  * Run with: node scripts/generate-assets.mjs
  *
  * Generates four on-brand PNGs: black background, orange (#FF6B00) accent ring.
