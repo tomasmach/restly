@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,6 +15,7 @@ import { CountdownDisplay } from '../components/CountdownDisplay';
 import { RunningControls } from '../components/RunningControls';
 import { PresetButton } from '../components/PresetButton';
 import { AddPresetModal } from '../components/AddPresetModal';
+import { DeletePresetModal } from '../components/DeletePresetModal';
 
 import { useTimer } from '../hooks/useTimer';
 import { usePresets } from '../hooks/usePresets';
@@ -23,11 +23,11 @@ import { useNotifications } from '../hooks/useNotifications';
 
 import { colors } from '../constants/colors';
 import { fonts, tracking } from '../constants/typography';
-import { FIXED_PRESETS, MAX_CUSTOM_PRESETS } from '../constants/presets';
+import { MAX_PRESETS } from '../constants/presets';
 import { formatSeconds } from '../utils/time';
 
 export function TimerScreen() {
-  const { hydrated, customPresets, lastUsed, addPreset, removePreset, setLastUsed } =
+  const { hydrated, presets, lastUsed, addPreset, removePreset, setLastUsed } =
     usePresets();
 
   const { ensurePermission, schedule, cancel } = useNotifications();
@@ -54,6 +54,7 @@ export function TimerScreen() {
   });
 
   const [modalVisible, setModalVisible] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
   // Compute tile width so two columns always fit cleanly with a 12px gap.
   const { width: screenWidth } = useWindowDimensions();
@@ -89,23 +90,15 @@ export function TimerScreen() {
     [ensurePermission, setLastUsed, timer],
   );
 
-  const handleDeleteCustom = useCallback(
-    (seconds: number) => {
-      Alert.alert(
-        'Delete preset',
-        formatSeconds(seconds),
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: () => removePreset(seconds),
-          },
-        ],
-      );
-    },
-    [removePreset],
-  );
+  const handleDeletePreset = useCallback((seconds: number) => {
+    setPendingDelete(seconds);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (pendingDelete !== null) {
+      void removePreset(pendingDelete);
+    }
+  }, [pendingDelete, removePreset]);
 
   const handleAddPreset = useCallback(
     async (seconds: number) => {
@@ -164,40 +157,27 @@ export function TimerScreen() {
         <Text style={styles.sectionLabel}>CHOOSE A PRESET</Text>
 
         <View style={styles.grid}>
-          {FIXED_PRESETS.map((seconds) => (
-            <View key={`fixed-${seconds}`} style={[styles.tile, { width: tileWidth }]}>
+          {presets.map((seconds) => (
+            <View key={`preset-${seconds}`} style={[styles.tile, { width: tileWidth }]}>
               <PresetButton
                 seconds={seconds}
-                isCustom={false}
                 isHighlighted={seconds === highlightedSeconds}
                 testID={`preset-${seconds}`}
                 onPress={() => handleStart(seconds)}
+                onLongPress={() => handleDeletePreset(seconds)}
               />
             </View>
           ))}
 
-          {customPresets.map((seconds) => (
-            <View key={`custom-${seconds}`} style={[styles.tile, { width: tileWidth }]}>
-              <PresetButton
-                seconds={seconds}
-                isCustom={true}
-                isHighlighted={seconds === highlightedSeconds}
-                testID={`preset-${seconds}`}
-                onPress={() => handleStart(seconds)}
-                onLongPress={() => handleDeleteCustom(seconds)}
-              />
-            </View>
-          ))}
-
-          {customPresets.length < MAX_CUSTOM_PRESETS && (
+          {presets.length < MAX_PRESETS && (
             <View style={[styles.tile, { width: tileWidth }]}>
               <AddTileButton onPress={() => setModalVisible(true)} testID="add-preset-tile" />
             </View>
           )}
         </View>
 
-        {customPresets.length > 0 && (
-          <Text style={styles.footnote}>HOLD A CUSTOM PRESET TO REMOVE</Text>
+        {presets.length > 0 && (
+          <Text style={styles.footnote}>HOLD A PRESET TO REMOVE</Text>
         )}
       </ScrollView>
 
@@ -205,7 +185,14 @@ export function TimerScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onSave={handleAddPreset}
-        existingPresets={[...FIXED_PRESETS, ...customPresets]}
+        existingPresets={presets}
+      />
+
+      <DeletePresetModal
+        visible={pendingDelete !== null}
+        seconds={pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
       />
     </>
   );

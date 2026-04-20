@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { ImpactFeedbackStyle } from 'expo-haptics';
 import { colors } from '../constants/colors';
 import { fonts, tracking } from '../constants/typography';
-import { MIN_CUSTOM_SECONDS, MAX_CUSTOM_SECONDS } from '../constants/presets';
+import { MIN_PRESET_SECONDS, MAX_PRESET_SECONDS } from '../constants/presets';
 
 type AddPresetModalProps = {
   visible: boolean;
@@ -36,7 +36,7 @@ export function AddPresetModal({
   }, [visible]);
 
   const total = minutes * 60 + secondsField;
-  const inRange = total >= MIN_CUSTOM_SECONDS && total <= MAX_CUSTOM_SECONDS;
+  const inRange = total >= MIN_PRESET_SECONDS && total <= MAX_PRESET_SECONDS;
   const alreadyExists = inRange && existingPresets.includes(total);
   const isValid = inRange && !alreadyExists;
   const saveLabel = alreadyExists ? 'ALREADY EXISTS' : 'SAVE PRESET';

@@ -1,0 +1,12 @@
+appId: com.tomasmach.restly
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: "preset-60"
+- longPressOn:
+    id: "preset-60"
+- tapOn:
+    id: "delete-preset-confirm"
+- assertNotVisible:
+    id: "preset-60"

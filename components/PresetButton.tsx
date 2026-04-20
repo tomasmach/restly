@@ -7,7 +7,6 @@ import { formatSeconds } from '../utils/time';
 
 type PresetButtonProps = {
   seconds: number;
-  isCustom?: boolean;
   isHighlighted?: boolean;
   disabled?: boolean;
   testID?: string;
@@ -17,7 +16,6 @@ type PresetButtonProps = {
 
 export function PresetButton({
   seconds,
-  isCustom = false,
   isHighlighted = false,
   disabled = false,
   testID,
@@ -80,7 +78,7 @@ export function PresetButton({
           isHighlighted && { color: colors.accent },
         ]}
       >
-        {isCustom ? `· ${descriptor} ·` : descriptor}
+        {descriptor}
       </Text>
     </Pressable>
   );

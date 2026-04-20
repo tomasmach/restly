@@ -12,6 +12,7 @@ appId: com.tomasmach.restly
     id: "preset-150"
 - longPressOn:
     id: "preset-150"
-- tapOn: "Delete"
+- tapOn:
+    id: "delete-preset-confirm"
 - assertNotVisible:
     id: "preset-150"
