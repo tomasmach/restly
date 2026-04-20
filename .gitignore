@@ -40,3 +40,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# generated icon assets (regenerated via uprate:generate-icon)
+/icons
+
+# local MCP tool artifacts
+.playwright-mcp/
