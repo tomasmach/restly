@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Repause",
-    "slug": "repause",
+    "name": "Pauzer",
+    "slug": "pauzer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.tomasmach.repause",
+      "bundleIdentifier": "com.tomasmach.pauzer",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

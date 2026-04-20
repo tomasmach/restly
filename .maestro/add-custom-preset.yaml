@@ -1,4 +1,4 @@
-appId: com.tomasmach.repause
+appId: com.tomasmach.pauzer
 ---
 - launchApp:
     clearState: true

@@ -22,7 +22,7 @@ export interface UseTimerResult {
   acknowledgeComplete: () => void;
 }
 
-const KEEP_AWAKE_TAG = 'repause-timer';
+const KEEP_AWAKE_TAG = 'pauzer-timer';
 const INTERVAL_MS = 33;
 
 export function useTimer(options?: UseTimerOptions): UseTimerResult {

@@ -8,9 +8,9 @@ import {
   MIN_PRESET_SECONDS,
 } from '../constants/presets';
 
-const STORAGE_KEY_PRESETS = 'repause.presets';
-const STORAGE_KEY_LEGACY_CUSTOM = 'repause.customPresets';
-const STORAGE_KEY_LAST_USED = 'repause.lastUsedPresetSeconds';
+const STORAGE_KEY_PRESETS = 'pauzer.presets';
+const STORAGE_KEY_LEGACY_CUSTOM = 'pauzer.customPresets';
+const STORAGE_KEY_LAST_USED = 'pauzer.lastUsedPresetSeconds';
 
 export type AddPresetResult = 'ok' | 'duplicate' | 'invalid' | 'full';
 

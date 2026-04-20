@@ -149,7 +149,7 @@ export function TimerScreen() {
         style={styles.gridScroll}
       >
         <View style={styles.header}>
-          <Text style={styles.brand}>Repause</Text>
+          <Text style={styles.brand}>Pauzer</Text>
           <View style={styles.headerRule} />
           <Text style={styles.tagline}>A QUIET TIMER · REST WELL</Text>
         </View>
