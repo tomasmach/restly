@@ -23,7 +23,7 @@ export interface UseTimerResult {
 }
 
 const KEEP_AWAKE_TAG = 'restly-timer';
-const INTERVAL_MS = 100;
+const INTERVAL_MS = 33;
 
 export function useTimer(options?: UseTimerOptions): UseTimerResult {
   // ── State ──────────────────────────────────────────────────────────────────
@@ -230,7 +230,8 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
     async (deltaSeconds: number): Promise<void> => {
       if (statusRef.current !== 'running') return;
 
-      const elapsed = Date.now() - startTimestampRef.current;
+      const now = Date.now();
+      const elapsed = now - startTimestampRef.current;
       const currentRemaining = totalMsRef.current - elapsed;
       const newRemainingMs = currentRemaining + deltaSeconds * 1000;
 
@@ -241,10 +242,10 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
         return;
       }
 
-      // Update totalMs so that elapsed is preserved and new remaining is correct:
-      // totalMs = elapsed + newRemainingMs = (Date.now() - startTimestamp) + newRemainingMs
-      const newTotalMs = elapsed + newRemainingMs;
-      syncTotalMs(newTotalMs);
+      // Keep totalMs fixed at the original session duration — shift the
+      // start timestamp so that remaining = totalMs - (now - startTs).
+      // newStartTs = now - (totalMs - newRemaining)
+      startTimestampRef.current = now - (totalMsRef.current - newRemainingMs);
       setRemainingMs(newRemainingMs);
 
       // Cancel old notification, reschedule with new remaining seconds.
@@ -257,8 +258,7 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
         // ignore
       }
 
-      // Recompute endTime based on updated values.
-      const newEndsAtMs = startTimestampRef.current + newTotalMs;
+      const newEndsAtMs = now + newRemainingMs;
       const newSeconds = Math.ceil(newRemainingMs / 1000);
 
       try {

@@ -14,16 +14,12 @@ export function CircularProgress({
   strokeWidth,
 }: CircularProgressProps) {
   const clampedProgress = Math.min(1, Math.max(0, progress));
+  // Outer hairline sits at r; active arc is inset so its outer edge aligns with the hairline.
   const r = (size - strokeWidth) / 2;
-  const c = 2 * Math.PI * r;
+  const arcR = r - strokeWidth / 2;
+  const c = 2 * Math.PI * arcR;
   const dashOffset = c * (1 - clampedProgress);
   const center = size / 2;
-
-  // A soft "glow" halo ring sits just outside the main track — it's subtle
-  // at all times but meaningfully lifts the active arc off the background.
-  const glowInset = strokeWidth * 1.8;
-  const glowR = r + glowInset / 2;
-  const glowStrokeWidth = glowInset;
 
   return (
     <View>
@@ -34,25 +30,7 @@ export function CircularProgress({
             <Stop offset="55%" stopColor={colors.accent} stopOpacity={1} />
             <Stop offset="100%" stopColor={colors.accentDeep} stopOpacity={1} />
           </LinearGradient>
-          <LinearGradient id="glowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor={colors.accentSoft} stopOpacity={0.18} />
-            <Stop offset="100%" stopColor={colors.accent} stopOpacity={0} />
-          </LinearGradient>
         </Defs>
-
-        {/* Ambient halo — visible as the arc sweeps past */}
-        <Circle
-          cx={center}
-          cy={center}
-          r={glowR}
-          stroke="url(#glowGradient)"
-          strokeWidth={glowStrokeWidth}
-          fill="none"
-          strokeDasharray={c}
-          strokeDashoffset={dashOffset}
-          strokeLinecap="round"
-          transform={`rotate(-90, ${center}, ${center})`}
-        />
 
         {/* Track */}
         <Circle
@@ -78,7 +56,7 @@ export function CircularProgress({
         <Circle
           cx={center}
           cy={center}
-          r={r}
+          r={arcR}
           stroke="url(#arcGradient)"
           strokeWidth={strokeWidth}
           fill="none"
