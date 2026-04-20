@@ -31,10 +31,18 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      ["expo-notifications", {
-        "icon": "./assets/icon.png",
-        "color": "#FF6B00"
-      }]
-    ]
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#FF6B00"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "87681cde-c17b-43f4-9895-1017b6b53257"
+      }
+    }
   }
 }
