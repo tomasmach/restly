@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
-export type TimerStatus = 'idle' | 'running' | 'completed';
+import { STORAGE_KEY_ACTIVE_TIMER } from '../constants/storage';
+
+export type TimerStatus = 'idle' | 'running';
 
 export type UseTimerOptions = {
   onStart?: (seconds: number, endsAtMs: number) => Promise<string | null> | string | null;
@@ -15,48 +18,94 @@ export interface UseTimerResult {
   status: TimerStatus;
   totalMs: number;
   remainingMs: number;
+  overrunMs: number;
   lastUsedSeconds: number | null;
   start: (seconds: number) => Promise<void>;
   cancel: () => Promise<void>;
   adjust: (deltaSeconds: number) => Promise<void>;
-  acknowledgeComplete: () => void;
 }
 
 const KEEP_AWAKE_TAG = 'pauzer-timer';
 const INTERVAL_MS = 33;
+// Resume records older than this past their endsAt are treated as abandoned.
+const STALE_CUTOFF_MS = 10 * 60 * 1000;
+
+type ActiveTimerRecord = {
+  endsAt: number;
+  totalMs: number;
+  notificationId: string | null;
+};
+
+async function persistActive(record: ActiveTimerRecord): Promise<void> {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY_ACTIVE_TIMER, JSON.stringify(record));
+  } catch (e) {
+    console.warn('[useTimer] Failed to persist active timer', e);
+  }
+}
+
+async function clearActive(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEY_ACTIVE_TIMER);
+  } catch (e) {
+    console.warn('[useTimer] Failed to clear active timer', e);
+  }
+}
+
+function parseActiveRecord(raw: string | null): ActiveTimerRecord | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      typeof (parsed as ActiveTimerRecord).endsAt === 'number' &&
+      typeof (parsed as ActiveTimerRecord).totalMs === 'number'
+    ) {
+      const record = parsed as ActiveTimerRecord;
+      return {
+        endsAt: record.endsAt,
+        totalMs: record.totalMs,
+        notificationId:
+          typeof record.notificationId === 'string' ? record.notificationId : null,
+      };
+    }
+  } catch {
+    // fall through
+  }
+  return null;
+}
 
 export function useTimer(options?: UseTimerOptions): UseTimerResult {
   // ── State ──────────────────────────────────────────────────────────────────
   const [status, setStatus] = useState<TimerStatus>('idle');
   const [totalMs, setTotalMs] = useState(0);
   const [remainingMs, setRemainingMs] = useState(0);
+  const [overrunMs, setOverrunMs] = useState(0);
   const [lastUsedSeconds, setLastUsedSeconds] = useState<number | null>(null);
 
   // ── Refs (survive renders without causing re-subscriptions) ────────────────
-  // Keep options in a ref so interval/AppState callbacks always see fresh
-  // closures without needing to re-subscribe.
   const optionsRef = useRef<UseTimerOptions | undefined>(options);
   useEffect(() => {
     optionsRef.current = options;
   });
 
-  // Timer state refs — used inside interval/AppState callbacks to avoid
-  // stale closures over the corresponding state variables.
   const statusRef = useRef<TimerStatus>('idle');
   const startTimestampRef = useRef<number>(0);
   const totalMsRef = useRef<number>(0);
   const notificationIdRef = useRef<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Guards the one-shot side effects (haptic, notification cancel, keep-awake
+  // deactivate) that fire the moment we cross zero into overrun.
+  const overrunEnteredRef = useRef<boolean>(false);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  /** Synchronise both the ref and React state for status. */
   function syncStatus(s: TimerStatus) {
     statusRef.current = s;
     setStatus(s);
   }
 
-  /** Synchronise both the ref and React state for totalMs. */
   function syncTotalMs(ms: number) {
     totalMsRef.current = ms;
     setTotalMs(ms);
@@ -69,12 +118,13 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
     }
   }
 
-  /** Core completion logic. Called from interval or AppState. */
-  const fireCompletion = useCallback(async () => {
-    if (statusRef.current !== 'running') return;  // re-entry guard
-    statusRef.current = 'completed';               // close the window immediately
-
-    clearInterval_();
+  /**
+   * Fires the one-shot side effects when the countdown first crosses zero.
+   * Status stays 'running' — the timer continues ticking into overrun.
+   */
+  const fireOverrunEntry = useCallback(async () => {
+    if (overrunEnteredRef.current) return;
+    overrunEnteredRef.current = true;
 
     try {
       deactivateKeepAwake(KEEP_AWAKE_TAG);
@@ -89,16 +139,12 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
     }
 
     const id = notificationIdRef.current;
+    notificationIdRef.current = null;
     try {
       await optionsRef.current?.onComplete?.(id);
     } catch {
       // ignore
     }
-
-    // Transition: remainingMs stays 0, totalMs retained for UI ring,
-    // status moves to 'completed'.
-    setRemainingMs(0);
-    syncStatus('completed');
   }, []);
 
   // ── Interval tick ──────────────────────────────────────────────────────────
@@ -116,12 +162,15 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
 
       if (remaining <= 0) {
         setRemainingMs(0);
-        void fireCompletion();
+        setOverrunMs(-remaining);
+        if (!overrunEnteredRef.current) {
+          void fireOverrunEntry();
+        }
       } else {
         setRemainingMs(remaining);
       }
     }, INTERVAL_MS);
-  }, [fireCompletion]);
+  }, [fireOverrunEntry]);
 
   // ── AppState listener ──────────────────────────────────────────────────────
 
@@ -135,7 +184,10 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
 
           if (remaining <= 0) {
             setRemainingMs(0);
-            void fireCompletion();
+            setOverrunMs(-remaining);
+            if (!overrunEnteredRef.current) {
+              void fireOverrunEntry();
+            }
           } else {
             setRemainingMs(remaining);
           }
@@ -146,10 +198,73 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
     return () => {
       subscription.remove();
     };
-  }, [fireCompletion]);
+  }, [fireOverrunEntry]);
+
+  // ── Hydration: resume across app kill ──────────────────────────────────────
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function hydrate() {
+      try {
+        const raw = await AsyncStorage.getItem(STORAGE_KEY_ACTIVE_TIMER);
+        if (cancelled) return;
+        const record = parseActiveRecord(raw);
+        if (!record) {
+          if (raw !== null) void clearActive();
+          return;
+        }
+
+        const now = Date.now();
+        const remaining = record.endsAt - now;
+        const overshoot = -remaining;
+
+        if (remaining > 0) {
+          startTimestampRef.current = record.endsAt - record.totalMs;
+          notificationIdRef.current = record.notificationId;
+          overrunEnteredRef.current = false;
+          syncTotalMs(record.totalMs);
+          setRemainingMs(remaining);
+          setOverrunMs(0);
+          setLastUsedSeconds(Math.round(record.totalMs / 1000));
+          syncStatus('running');
+          try {
+            await activateKeepAwakeAsync(KEEP_AWAKE_TAG);
+          } catch {
+            // ignore
+          }
+          startInterval();
+        } else if (overshoot < STALE_CUTOFF_MS) {
+          // Resume directly into overrun. The scheduled notification already
+          // fired while the app was closed, so skip the haptic and don't
+          // reactivate keep-awake — treat as if we just crossed zero.
+          startTimestampRef.current = record.endsAt - record.totalMs;
+          notificationIdRef.current = null;
+          overrunEnteredRef.current = true;
+          syncTotalMs(record.totalMs);
+          setRemainingMs(0);
+          setOverrunMs(overshoot);
+          setLastUsedSeconds(Math.round(record.totalMs / 1000));
+          syncStatus('running');
+          startInterval();
+        } else {
+          void clearActive();
+        }
+      } catch (e) {
+        console.warn('[useTimer] Failed to hydrate active timer', e);
+      }
+    }
+
+    void hydrate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [startInterval]);
 
   // ── Unmount cleanup ────────────────────────────────────────────────────────
-  // Does NOT call onCancel — unmount is not user-initiated.
+  // Does NOT call onCancel and does NOT clear persisted state — unmount is
+  // not user-initiated, and we want to resume on next launch.
 
   useEffect(() => {
     return () => {
@@ -172,8 +287,10 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
       const now = Date.now();
 
       startTimestampRef.current = now;
+      overrunEnteredRef.current = false;
       syncTotalMs(ms);
       setRemainingMs(ms);
+      setOverrunMs(0);
       setLastUsedSeconds(seconds);
       syncStatus('running');
 
@@ -189,12 +306,20 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
         // ignore
       }
 
+      const endsAt = now + ms;
+
       try {
-        const id = (await optionsRef.current?.onStart?.(seconds, now + ms)) ?? null;
+        const id = (await optionsRef.current?.onStart?.(seconds, endsAt)) ?? null;
         notificationIdRef.current = id;
       } catch {
         notificationIdRef.current = null;
       }
+
+      void persistActive({
+        endsAt,
+        totalMs: ms,
+        notificationId: notificationIdRef.current,
+      });
 
       startInterval();
     },
@@ -221,9 +346,13 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
       // ignore
     }
 
+    void clearActive();
+
+    overrunEnteredRef.current = false;
     syncStatus('idle');
     syncTotalMs(0);
     setRemainingMs(0);
+    setOverrunMs(0);
   }, []);
 
   const adjust = useCallback(
@@ -231,27 +360,62 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
       if (statusRef.current !== 'running') return;
 
       const now = Date.now();
-      const elapsed = now - startTimestampRef.current;
-      const currentRemaining = totalMsRef.current - elapsed;
-      const newRemainingMs = currentRemaining + deltaSeconds * 1000;
+      const wasOverrun = overrunEnteredRef.current;
 
-      if (newRemainingMs <= 0) {
-        // Treat as completion
-        setRemainingMs(0);
-        void fireCompletion();
-        return;
+      // -N is a no-op during overrun — can't shrink a negative remaining.
+      if (wasOverrun && deltaSeconds <= 0) return;
+
+      let newRemainingMs: number;
+      let newTotalMs: number;
+
+      if (wasOverrun) {
+        // Rescue: fresh delta-second countdown. Reset ring + state cleanly.
+        newRemainingMs = deltaSeconds * 1000;
+        newTotalMs = newRemainingMs;
+        overrunEnteredRef.current = false;
+        try {
+          await activateKeepAwakeAsync(KEEP_AWAKE_TAG);
+        } catch {
+          // ignore
+        }
+      } else {
+        const elapsed = now - startTimestampRef.current;
+        const currentRemaining = totalMsRef.current - elapsed;
+        newRemainingMs = currentRemaining + deltaSeconds * 1000;
+        newTotalMs = totalMsRef.current;
+
+        if (newRemainingMs <= 0) {
+          // Shrunk past zero — slide into overrun instead of completing.
+          startTimestampRef.current = now - (newTotalMs - newRemainingMs);
+          setRemainingMs(0);
+          setOverrunMs(-newRemainingMs);
+
+          const oldId = notificationIdRef.current;
+          notificationIdRef.current = null;
+          try {
+            await optionsRef.current?.onCancel?.(oldId);
+          } catch {
+            // ignore
+          }
+
+          void fireOverrunEntry();
+
+          void persistActive({
+            endsAt: startTimestampRef.current + newTotalMs,
+            totalMs: newTotalMs,
+            notificationId: null,
+          });
+          return;
+        }
       }
 
-      // Keep totalMs fixed at the original session duration — shift the
-      // start timestamp so that remaining = totalMs - (now - startTs).
-      // newStartTs = now - (totalMs - newRemaining)
-      startTimestampRef.current = now - (totalMsRef.current - newRemainingMs);
+      startTimestampRef.current = now - (newTotalMs - newRemainingMs);
+      syncTotalMs(newTotalMs);
       setRemainingMs(newRemainingMs);
+      setOverrunMs(0);
 
-      // Cancel old notification, reschedule with new remaining seconds.
       const oldId = notificationIdRef.current;
       notificationIdRef.current = null;
-
       try {
         await optionsRef.current?.onCancel?.(oldId);
       } catch {
@@ -268,26 +432,24 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
       } catch {
         notificationIdRef.current = null;
       }
-    },
-    [fireCompletion],
-  );
 
-  const acknowledgeComplete = useCallback((): void => {
-    notificationIdRef.current = null;
-    syncStatus('idle');
-    syncTotalMs(0);
-    setRemainingMs(0);
-    // lastUsedSeconds intentionally left unchanged.
-  }, []);
+      void persistActive({
+        endsAt: newEndsAtMs,
+        totalMs: newTotalMs,
+        notificationId: notificationIdRef.current,
+      });
+    },
+    [fireOverrunEntry],
+  );
 
   return {
     status,
     totalMs,
     remainingMs,
+    overrunMs,
     lastUsedSeconds,
     start,
     cancel,
     adjust,
-    acknowledgeComplete,
   };
 }

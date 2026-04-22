@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -62,20 +62,6 @@ export function TimerScreen() {
   const GRID_GAP = 12;
   const tileWidth = (screenWidth - GRID_HPAD * 2 - GRID_GAP) / 2;
 
-  // ── acknowledgeComplete after 1500 ms ──────────────────────────────────────
-  const acknowledgeRef = useRef(timer.acknowledgeComplete);
-  useEffect(() => {
-    acknowledgeRef.current = timer.acknowledgeComplete;
-  });
-
-  useEffect(() => {
-    if (timer.status !== 'completed') return;
-    const timeout = setTimeout(() => {
-      acknowledgeRef.current();
-    }, 1500);
-    return () => clearTimeout(timeout);
-  }, [timer.status]);
-
   const highlightedSeconds = useMemo(
     () => timer.lastUsedSeconds ?? lastUsed,
     [timer.lastUsedSeconds, lastUsed],
@@ -111,8 +97,8 @@ export function TimerScreen() {
     return <View style={styles.loadingContainer} />;
   }
 
-  // ── Running / Completed view ───────────────────────────────────────────────
-  if (timer.status === 'running' || timer.status === 'completed') {
+  // ── Running view ───────────────────────────────────────────────────────────
+  if (timer.status === 'running') {
     const progress =
       timer.totalMs > 0 ? timer.remainingMs / timer.totalMs : 0;
     const totalSeconds = Math.round(timer.totalMs / 1000);
@@ -127,7 +113,11 @@ export function TimerScreen() {
         <View style={styles.progressWrapper}>
           <CircularProgress progress={progress} size={300} strokeWidth={6} />
           <View style={styles.countdownOverlay}>
-            <CountdownDisplay remainingMs={timer.remainingMs} testID="countdown-display" />
+            <CountdownDisplay
+              remainingMs={timer.remainingMs}
+              overrunMs={timer.overrunMs}
+              testID="countdown-display"
+            />
           </View>
         </View>
 

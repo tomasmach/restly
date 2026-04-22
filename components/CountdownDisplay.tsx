@@ -1,19 +1,24 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../constants/colors';
 import { fonts, tracking } from '../constants/typography';
-import { formatMs } from '../utils/time';
+import { formatMs, formatOverrunMs } from '../utils/time';
 
 type CountdownDisplayProps = {
   remainingMs: number;
+  overrunMs?: number;
   testID?: string;
 };
 
-export function CountdownDisplay({ remainingMs, testID }: CountdownDisplayProps) {
+export function CountdownDisplay({ remainingMs, overrunMs = 0, testID }: CountdownDisplayProps) {
+  const isOverrun = overrunMs > 0;
+
   return (
     <View style={styles.container}>
-      <Text style={styles.caption}>REMAINING</Text>
-      <Text style={styles.text} testID={testID}>
-        {formatMs(remainingMs)}
+      <Text style={[styles.caption, isOverrun && styles.captionOverrun]}>
+        {isOverrun ? 'OVERRUN' : 'REMAINING'}
+      </Text>
+      <Text style={[styles.text, isOverrun && styles.textOverrun]} testID={testID}>
+        {isOverrun ? formatOverrunMs(overrunMs) : formatMs(remainingMs)}
       </Text>
     </View>
   );
@@ -32,6 +37,9 @@ const styles = StyleSheet.create({
     letterSpacing: tracking.chrome,
     marginBottom: 6,
   },
+  captionOverrun: {
+    color: colors.danger,
+  },
   text: {
     fontFamily: fonts.display,
     fontSize: 92,
@@ -40,5 +48,8 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
     letterSpacing: tracking.tighter,
     lineHeight: 96,
+  },
+  textOverrun: {
+    color: colors.danger,
   },
 });
