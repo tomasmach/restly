@@ -211,7 +211,7 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
         if (cancelled) return;
         const record = parseActiveRecord(raw);
         if (!record) {
-          if (raw !== null) void clearActive();
+          if (raw !== null) await clearActive();
           return;
         }
 
@@ -248,7 +248,7 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
           syncStatus('running');
           startInterval();
         } else {
-          void clearActive();
+          await clearActive();
         }
       } catch (e) {
         console.warn('[useTimer] Failed to hydrate active timer', e);
@@ -315,7 +315,7 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
         notificationIdRef.current = null;
       }
 
-      void persistActive({
+      await persistActive({
         endsAt,
         totalMs: ms,
         notificationId: notificationIdRef.current,
@@ -346,7 +346,7 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
       // ignore
     }
 
-    void clearActive();
+    await clearActive();
 
     overrunEnteredRef.current = false;
     syncStatus('idle');
@@ -400,7 +400,7 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
 
           void fireOverrunEntry();
 
-          void persistActive({
+          await persistActive({
             endsAt: startTimestampRef.current + newTotalMs,
             totalMs: newTotalMs,
             notificationId: null,
@@ -433,7 +433,7 @@ export function useTimer(options?: UseTimerOptions): UseTimerResult {
         notificationIdRef.current = null;
       }
 
-      void persistActive({
+      await persistActive({
         endsAt: newEndsAtMs,
         totalMs: newTotalMs,
         notificationId: notificationIdRef.current,
